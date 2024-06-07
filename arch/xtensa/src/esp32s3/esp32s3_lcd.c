@@ -144,6 +144,11 @@
 
 #define CURRENT_LAYER(p)          (&((p)->layer[(p)->cur_layer]))
 
+#define ESP32S3_LCD_DBLBUFFERED   (ESP32S3_LCD_LAYERS == 1)
+
+#define ESP32S3_LCD_FB_ALLOC_SIZE (ESP32S3_LCD_FB_SIZE * \
+                                   (1 + ESP32S3_LCD_DBLBUFFERED))
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -244,6 +249,11 @@ static int esp32s3_lcd_base_updatearea(struct fb_vtable_s *vtable,
                                        const struct fb_area_s *area);
 #endif
 
+#if ESP32S3_LCD_DBLBUFFERED
+static int esp32s3_lcd_base_pandisplay(FAR struct fb_vtable_s *vtable,
+                                       FAR struct fb_planeinfo_s *pinfo);
+#endif
+
 /* Initialization ***********************************************************/
 
 static void esp32s3_lcd_dmasetup(void);
@@ -300,12 +310,15 @@ static const struct fb_videoinfo_s g_base_videoinfo =
 
 /* This structure provides the base layer interface */
 
-static const struct fb_vtable_s g_base_vtable =
+static struct fb_vtable_s g_base_vtable =
 {
   .getvideoinfo  = esp32s3_lcd_base_getvideoinfo,
   .getplaneinfo  = esp32s3_lcd_base_getplaneinfo,
 #ifdef CONFIG_FB_UPDATE
   .updatearea    = esp32s3_lcd_base_updatearea,
+#endif
+#if ESP32S3_LCD_DBLBUFFERED
+  .pandisplay    = esp32s3_lcd_base_pandisplay,
 #endif
 };
 
@@ -515,9 +528,12 @@ static int esp32s3_lcd_base_getplaneinfo(struct fb_vtable_s *vtable,
 
       pinfo->display = 0;
       pinfo->fbmem   = (void *)layer->framebuffer;
-      pinfo->fblen   = ESP32S3_LCD_FB_SIZE;
+      pinfo->fblen   = ESP32S3_LCD_FB_ALLOC_SIZE;
       pinfo->stride  = ESP32S3_LCD_STRIDE;
       pinfo->bpp     = ESP32S3_LCD_DATA_BPP;
+#if ESP32S3_LCD_DBLBUFFERED
+      pinfo->yres_virtual = CONFIG_ESP32S3_LCD_VRES * 2;
+#endif
       return OK;
     }
 
@@ -548,7 +564,31 @@ static int esp32s3_lcd_base_updatearea(struct fb_vtable_s *vtable,
   struct esp32s3_lcd_s *priv = &g_lcd_priv;
 
   cache_writeback_addr(CURRENT_LAYER(priv)->framebuffer,
-                       ESP32S3_LCD_FB_SIZE);
+                       ESP32S3_LCD_FB_ALLOC_SIZE);
+
+  return 0;
+}
+#endif
+
+#if ESP32S3_LCD_DBLBUFFERED
+static int esp32s3_lcd_base_pandisplay(FAR struct fb_vtable_s *vtable,
+                                       FAR struct fb_planeinfo_s *pinfo)
+{
+  struct esp32s3_lcd_s *priv = &g_lcd_priv;
+  struct esp32s3_layer_s *layer = &priv->layer[0];
+  uint8_t *fb_panned = &layer->framebuffer[pinfo->yoffset * ESP32S3_LCD_STRIDE];
+
+  up_disable_irq(ESP32S3_IRQ_LCD_CAM);
+
+  esp32s3_dma_wait_idle(priv->dma_channel, true);
+
+  esp32s3_dma_setup(layer->dmadesc,
+                    ESP32S3_LCD_DMADESC_NUM,
+                    fb_panned,
+                    ESP32S3_LCD_FB_SIZE,
+                    true, priv->dma_channel);
+
+  up_enable_irq(ESP32S3_IRQ_LCD_CAM);
 
   return 0;
 }
@@ -607,7 +647,7 @@ static int IRAM_ATTR lcd_interrupt(int irq, void *context, void *arg)
       /* Write framebuffer data from D-cache to PSRAM */
 
       cache_writeback_addr(CURRENT_LAYER(priv)->framebuffer,
-                           ESP32S3_LCD_FB_SIZE);
+                           ESP32S3_LCD_FB_ALLOC_SIZE);
 #endif
 
       /* Enable DMA TX */
@@ -623,6 +663,8 @@ static int IRAM_ATTR lcd_interrupt(int irq, void *context, void *arg)
       regval  = esp32s3_lcd_getreg(LCD_CAM_LCD_USER_REG);
       regval |= LCD_CAM_LCD_START_M;
       esp32s3_lcd_putreg(LCD_CAM_LCD_USER_REG, regval);
+
+      fb_remove_paninfo(&g_base_vtable, FB_NO_OVERLAY);
     }
 
   return 0;
@@ -659,9 +701,9 @@ static void esp32s3_lcd_dmasetup(void)
     {
       struct esp32s3_layer_s *layer = &priv->layer[i];
 
-      layer->framebuffer = memalign(64, ESP32S3_LCD_FB_SIZE);
+      layer->framebuffer = memalign(64, ESP32S3_LCD_FB_ALLOC_SIZE);
       DEBUGASSERT(layer->framebuffer != NULL);
-      memset(layer->framebuffer, 0, ESP32S3_LCD_FB_SIZE);
+      memset(layer->framebuffer, 0, ESP32S3_LCD_FB_ALLOC_SIZE);
 
       esp32s3_dma_setup(layer->dmadesc,
                         ESP32S3_LCD_DMADESC_NUM,
