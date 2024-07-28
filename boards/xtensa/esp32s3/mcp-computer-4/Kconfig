@@ -3,7 +3,7 @@
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
 
-if ARCH_BOARD_ESP32S3_DEVKIT
+if ARCH_BOARD_MCP_COMPUTER_4
 
 choice
 	prompt "ESP32-S3-DevKitC-1 version"
@@ -92,4 +92,4 @@ config PM_SLEEP_WAKEUP_NSEC
 
 endif # PM
 
-endif # ARCH_BOARD_ESP32S3_DEVKIT
+endif # ARCH_BOARD_MCP_COMPUTER_4
