@@ -70,9 +70,9 @@ struct mcp_s
 
 static int gp_read(struct gpio_dev_s *dev, bool *value);
 static int gp_write(struct gpio_dev_s *dev, bool value);
-static int gp_attach(struct gpio_dev_s *dev,
-                     pin_interrupt_t callback);
-static int gp_enable(struct gpio_dev_s *dev, bool enable);
+// static int gp_attach(struct gpio_dev_s *dev,
+//                      pin_interrupt_t callback);
+// static int gp_enable(struct gpio_dev_s *dev, bool enable);
 static int gp_setpintype(FAR struct gpio_dev_s *dev,
                          enum gpio_pintype_e pintype);
 
@@ -179,7 +179,9 @@ static void register_mcp(struct mcp_s *mcp, unsigned idx, unsigned clk_pin, unsi
 int esp32s3_gpio_init(void)
 {
   static struct mcp_s mcp_0;
-  register_mcp(&mcp_0, 0, 15, 18);
+  register_mcp(&mcp_0, 0, 21, 14);
+  static struct mcp_s mcp_1;
+  register_mcp(&mcp_1, 1, 16, 15);
 
   return OK;
 }
