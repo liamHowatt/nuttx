@@ -4404,6 +4404,7 @@ source "boards/xtensa/esp32s3/esp32s3-box/Kconfig"
 endif
 if ARCH_BOARD_ESP32S3_KORVO_2
 source "boards/xtensa/esp32s3/esp32s3-korvo-2/Kconfig"
+endif
 if ARCH_BOARD_MCP_COMPUTER_4
 source "boards/xtensa/esp32s3/mcp-computer-4/Kconfig"
 endif
