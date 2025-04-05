@@ -434,26 +434,6 @@ static int littlefs_open(FAR struct file *filep, FAR const char *relpath,
         }
     }
 
-  /* In case of O_TRUNC, sync to commit the truncation.
-   *
-   * For example, consider a 6MB file on an 8MB filesystem.
-   * Open the file with O_TRUNC and (re)write some data until it grows
-   * to 6MB. Without this sync, it ends up with ENOSPC because
-   * littlefs doesn't commit the updates until sync/close and thus
-   * doesn't recycle the truncated space. Although it's normal for
-   * filesystems like littlefs, we automatically sync the truncation
-   * here to allow such a sequence to succeed, assuming it's what many
-   * of NuttX users expect.
-   *
-   * CAVEAT: On the other hand, this might surprise users who are familiar
-   * with the bare littlefs semantics.
-   */
-
-  if (oflags & LFS_O_TRUNC)
-    {
-      lfs_file_sync(&fs->lfs, &priv->file);
-    }
-
   nxmutex_unlock(&fs->lock);
 
   /* Attach the private date to the struct file instance */
