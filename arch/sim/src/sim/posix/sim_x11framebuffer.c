@@ -236,9 +236,13 @@ static void sim_x11uninit(void)
 
   if (g_shmcheckpoint > 1)
     {
-#ifdef CONFIG_SIM_X11NOSHM
-      g_image->data = g_framebuffer;
+#ifndef CONFIG_SIM_X11NOSHM
+      if (!b_useshm)
 #endif
+        {
+          g_image->data = g_framebuffer;
+        }
+
       XDestroyImage(g_image);
     }
 
@@ -265,6 +269,12 @@ static void sim_x11uninitialize(void)
         {
           free(g_framebuffer);
           g_framebuffer = 0;
+        }
+
+      if (g_image)
+        {
+          XDestroyImage(g_image);
+          g_image = 0;
         }
     }
 
