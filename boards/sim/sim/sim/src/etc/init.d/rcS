@@ -23,5 +23,5 @@
 #include <nuttx/config.h>
 
 #ifdef CONFIG_FS_HOSTFS
-mount -t hostfs -o fs=. /data
+mount -t hostfs -o fs=/root/nuttx_hostfs /data
 #endif
