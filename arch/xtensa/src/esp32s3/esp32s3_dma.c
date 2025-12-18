@@ -252,7 +252,7 @@ uint32_t esp32s3_dma_setup(struct esp32s3_dmadesc_s *dmadesc, uint32_t num,
   uint32_t data_len;
   uint32_t buf_len;
   int alignment = 4;
-  int dma_size = ESP32S3_DMA_BUFFER_MAX_SIZE;
+  int dma_size = ESP32S3_DMA_BUFFER_MAX_SIZE - 7;
   bool buffer_in_psram = esp32s3_ptr_extram(pdata);
   int block_size_index = 0;
   uint32_t addr = GDMA_CH_REG_ADDR(DMA_IN_CONF0_CH0_REG, chan);
