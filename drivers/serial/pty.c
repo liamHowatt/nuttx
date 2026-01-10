@@ -101,6 +101,7 @@ struct pty_devpair_s
   bool pp_unlinked;             /* File has been unlinked */
   uint8_t pp_minor;             /* Minor device number */
   uint16_t pp_nopen;            /* Open file count */
+  struct winsize winsz;         /* Geometry of the terminal */
   sem_t pp_slavesem;            /* Slave lock semaphore */
   mutex_t pp_lock;              /* Mutual exclusion */
 };
@@ -830,6 +831,36 @@ static int pty_ioctl(FAR struct file *filep, int cmd, unsigned long arg)
             {
               ret = file_ioctl(&dev->pd_sink, cmd, arg);
             }
+        }
+        break;
+
+      case TIOCGWINSZ:
+        {
+          FAR struct winsize *winsz = (FAR struct winsize *)arg;
+
+          if (!winsz)
+            {
+              ret = -EINVAL;
+              break;
+            }
+
+          *winsz = devpair->winsz;
+          ret = OK;
+        }
+        break;
+
+      case TIOCSWINSZ:
+        {
+          FAR const struct winsize *winsz = (FAR const struct winsize *)arg;
+
+          if (!winsz)
+            {
+              ret = -EINVAL;
+              break;
+            }
+
+          devpair->winsz = *winsz;
+          ret = OK;
         }
         break;
 
