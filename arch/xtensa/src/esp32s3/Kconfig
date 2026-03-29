@@ -422,11 +422,10 @@ config ESP32S3_I2C
 	default n
 
 config ESP32S3_I2S
-	bool "I2S (legacy implementation: read help)"
+	bool "I2S (legacy implementation)"
 	select I2S
 	---help---
-		This is a deprecated Kconfig macro. Its kept for retrocompatibility only.
-		Use "CONFIG_ESPRESSIF_I2S" instead.
+		See the Board Selection menu to configure the pins used by I2S.
 
 if ESP32S3_I2S
 
@@ -445,7 +444,6 @@ config ESP32S3_I2S0
 	select ESP32S3_DMA
 	select ESP32S3_GPIO_IRQ
 	select SCHED_HPWORK
-	select ESPRESSIF_I2S0
 
 if ESP32S3_I2S0
 
@@ -556,7 +554,6 @@ config ESP32S3_I2S1
 	select ESP32S3_DMA
 	select ESP32S3_GPIO_IRQ
 	select SCHED_HPWORK
-	select ESPRESSIF_I2S1
 
 if ESP32S3_I2S1
 
