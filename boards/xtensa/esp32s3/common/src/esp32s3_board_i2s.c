@@ -75,7 +75,7 @@ int board_i2sdev_initialize(int port, bool enable_tx, bool enable_rx)
   struct audio_lowerhalf_s *audio_i2s;
   struct i2s_dev_s *i2s;
   char devname[8];
-  int ret;
+  int ret = 0;
 
   ainfo("Initializing I2S\n");
 
@@ -108,26 +108,9 @@ int board_i2sdev_initialize(int port, bool enable_tx, bool enable_rx)
 
       snprintf(devname, sizeof(devname), "pcm%d", port);
 
-      /* If nxlooper is selected, the playback buffer is not rendered as
-       * a WAV file. Therefore, PCM decode will fail while processing such
-       * output buffer. In such a case, we bypass the PCM decode.
-       */
+      /* REVISIT: PCM decoder is skipped but it's inconsistent with other boards */
 
-#ifdef CONFIG_SYSTEM_NXLOOPER
       ret = audio_register(devname, audio_i2s);
-#else
-      struct audio_lowerhalf_s *pcm;
-
-      pcm = pcm_decode_initialize(audio_i2s);
-
-      if (pcm == NULL)
-        {
-          auderr("ERROR: Failed create the PCM decoder\n");
-          return -ENODEV;
-        }
-
-      ret = audio_register(devname, pcm);
-#endif /* CONFIG_SYSTEM_NXLOOPER */
 
       if (ret < 0)
         {

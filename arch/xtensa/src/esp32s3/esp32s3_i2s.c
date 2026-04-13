@@ -824,7 +824,7 @@ static IRAM_ATTR int i2s_txdma_setup(struct esp32s3_i2s_s *priv,
    * carried from the last upper half audio buffer.
    */
 
-  bfcontainer->buf = calloc(bfcontainer->nbytes, 1);
+  bfcontainer->buf = kmm_calloc(bfcontainer->nbytes, 1);
   if (bfcontainer->buf == NULL)
     {
       i2serr("Failed to allocate the DMA internal buffer "
@@ -1226,7 +1226,7 @@ static void i2s_tx_worker(void *arg)
 
       /* Release the internal buffer used by the DMA outlink */
 
-      free(bfcontainer->buf);
+      kmm_free(bfcontainer->buf);
 
       /* And release the buffer container */
 

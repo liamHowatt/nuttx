@@ -293,7 +293,7 @@ void moncontrol(int mode)
                                    sizeof(*p->kcount));
       int scale = kcountsize >= textsize ? SCALE_1_TO_1 :
                   (float)kcountsize / textsize * SCALE_1_TO_1;
-      FAR unsigned short *kcount = kmm_zalloc(kcountsize);
+      FAR unsigned short *kcount = zalloc(kcountsize);
       if (kcount == NULL)
         {
           serr("out of memory\n");
@@ -304,7 +304,7 @@ void moncontrol(int mode)
       if (p->kcount)
         {
           spin_unlock_irqrestore(&p->lock, flags);
-          kmm_free(kcount);
+          free(kcount);
           return;
         }
 
@@ -383,7 +383,7 @@ void monstartup(unsigned long lowpc, unsigned long highpc)
 
   tossize = tolimit * sizeof(struct tostruct);
 
-  buffer = kmm_zalloc(fromssize + tossize);
+  buffer = zalloc(fromssize + tossize);
   if (buffer == NULL)
     {
       serr("out of memory\n");
@@ -394,7 +394,7 @@ void monstartup(unsigned long lowpc, unsigned long highpc)
   if (p->tos != NULL)
     {
       spin_unlock_irqrestore(&p->lock, flags);
-      kmm_free(buffer);
+      free(buffer);
       return;
     }
 
@@ -433,8 +433,8 @@ void _mcleanup(void)
       write_gmon(p, prefix);
     }
 
-  kmm_free(p->tos);
-  kmm_free(p->kcount);
+  free(p->tos);
+  free(p->kcount);
 
   /* Reset buffer to initial state for safety */
 
